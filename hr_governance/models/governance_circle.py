@@ -398,7 +398,7 @@ class GovernanceCircle(models.Model):
                     role["name"] for role in self.type_id._get_enable_edit_circle_role()
                 ]
                 names = ", ".join(editable_roles)
-                raise AccessError(_("Only %s can edit this Circle") % names)
+                raise AccessError(_("Only %s can edit this Circle", names))
             raise AccessError(_("You cannot edit this Role"))
 
         res = super().write(vals)

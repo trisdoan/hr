@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import {ColorList} from "@web/core/colorlist/colorlist";
 import {_lt} from "@web/core/l10n/translation";
 
