@@ -11,8 +11,8 @@
         "hr",
         # oca/server-tools:
         "base_m2m_custom_field",
-        # oca/social:
-        "mail_activity_default_assignee",
+        # # oca/social:
+        # "mail_activity_default_assignee",
     ],
     "data": [
         "data/role_type_data.xml",
