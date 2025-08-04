@@ -11,13 +11,9 @@
         "hr",
         # oca/server-tools:
         "base_m2m_custom_field",
-        # # oca/social:
-        # "mail_activity_default_assignee",
     ],
     "data": [
-        "data/role_type_data.xml",
         "data/ir_config_parameter_data.xml",
-        "data/mail_activity_type_data.xml",
         "data/governance_circle_data.xml",
         "security/governance_security.xml",
         "security/ir.model.access.csv",
@@ -27,6 +23,10 @@
         "views/mail_activity_views.xml",
         "views/menu_views.xml",
         "views/res_config_settings_views.xml",
+    ],
+    "demo": [
+        "demo/governance_role_type_demo.xml",
+        "demo/governance_circle_demo.xml",
     ],
     "assets": {
         "hr_governance.chart_libs": [

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="circle_executive_committee" model="governance.circle">
+        <field name="name">Executive Committee</field>
+        <field name="parent_id" ref="hr_governance.root" />
+        <field name="type_id" ref="hr_governance.role_type_executive_committee" />
+        <field name="shape_type">circle</field>
+        <field name="color">8</field>
+    </record>
+    <!-- CEO Role in Executive Committee -->
+    <record id="role_ceo" model="governance.circle">
+        <field name="name">CEO</field>
+        <field name="parent_id" ref="hr_governance.circle_executive_committee" />
+        <field name="type_id" ref="hr_governance.role_type_ceo" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">1</field>
+    </record>
+    <!-- CTO Role in Executive Committee -->
+    <record id="role_cto" model="governance.circle">
+        <field name="name">CTO</field>
+        <field name="parent_id" ref="hr_governance.circle_executive_committee" />
+        <field name="type_id" ref="hr_governance.role_type_cto" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">2</field>
+    </record>
+    <!-- CFO Role in Executive Committee -->
+    <record id="role_cfo" model="governance.circle">
+        <field name="name">CFO</field>
+        <field name="parent_id" ref="hr_governance.circle_executive_committee" />
+        <field name="type_id" ref="hr_governance.role_type_cfo" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">3</field>
+    </record>
+    <!-- HR Director Role in Executive Committee -->
+    <record id="role_hr_director" model="governance.circle">
+        <field name="name">HR Director</field>
+        <field name="parent_id" ref="hr_governance.circle_executive_committee" />
+        <field name="type_id" ref="hr_governance.role_type_hr_director" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">4</field>
+    </record>
+    <!-- Technology Leadership Circle -->
+    <record id="circle_tech_leadership" model="governance.circle">
+        <field name="name">Technology Leadership</field>
+        <field name="parent_id" ref="hr_governance.root" />
+        <field name="type_id" ref="hr_governance.role_type_tech_leadership" />
+        <field name="shape_type">circle</field>
+        <field name="color">9</field>
+    </record>
+    <!-- CTO Role in Technology Leadership -->
+    <record id="role_cto_tech" model="governance.circle">
+        <field name="name">CTO</field>
+        <field name="parent_id" ref="hr_governance.circle_tech_leadership" />
+        <field name="type_id" ref="hr_governance.role_type_cto" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">2</field>
+    </record>
+    <!-- Product Team Circle -->
+    <record id="circle_product_team" model="governance.circle">
+        <field name="name">Product Team</field>
+        <field name="parent_id" ref="hr_governance.root" />
+        <field name="type_id" ref="hr_governance.role_type_product_team" />
+        <field name="shape_type">circle</field>
+        <field name="color">10</field>
+    </record>
+    <!-- Product Manager Role in Product Team -->
+    <record id="role_product_manager" model="governance.circle">
+        <field name="name">Product Manager</field>
+        <field name="parent_id" ref="hr_governance.circle_product_team" />
+        <field name="type_id" ref="hr_governance.role_type_product_manager" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">5</field>
+    </record>
+    <!-- Development Team Circle -->
+    <record id="circle_development_team" model="governance.circle">
+        <field name="name">Development Team</field>
+        <field name="parent_id" ref="hr_governance.root" />
+        <field name="type_id" ref="hr_governance.role_type_development_team" />
+        <field name="shape_type">circle</field>
+        <field name="color">11</field>
+    </record>
+    <!-- Team Lead Role in Development Team -->
+    <record id="role_team_lead" model="governance.circle">
+        <field name="name">Team Lead</field>
+        <field name="parent_id" ref="hr_governance.circle_development_team" />
+        <field name="type_id" ref="hr_governance.role_type_team_lead" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">6</field>
+    </record>
+    <!-- Developer Role in Development Team -->
+    <record id="role_developer" model="governance.circle">
+        <field name="name">Developer</field>
+        <field name="parent_id" ref="hr_governance.circle_development_team" />
+        <field name="type_id" ref="hr_governance.role_type_developer" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">7</field>
+    </record>
+    <!-- Frontend Team Circle (under Development) -->
+    <record id="circle_frontend_team" model="governance.circle">
+        <field name="name">Frontend Team</field>
+        <field name="parent_id" ref="hr_governance.circle_development_team" />
+        <field name="type_id" ref="hr_governance.role_type_development_team" />
+        <field name="shape_type">circle</field>
+        <field name="color">12</field>
+    </record>
+    <!-- Frontend Team Lead -->
+    <record id="role_frontend_team_lead" model="governance.circle">
+        <field name="name">Frontend Team Lead</field>
+        <field name="parent_id" ref="hr_governance.circle_frontend_team" />
+        <field name="type_id" ref="hr_governance.role_type_team_lead" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">6</field>
+    </record>
+    <!-- Frontend Developer -->
+    <record id="role_frontend_developer" model="governance.circle">
+        <field name="name">Frontend Developer</field>
+        <field name="parent_id" ref="hr_governance.circle_frontend_team" />
+        <field name="type_id" ref="hr_governance.role_type_developer" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">7</field>
+    </record>
+    <!-- Backend Team Circle (under Development) -->
+    <record id="circle_backend_team" model="governance.circle">
+        <field name="name">Backend Team</field>
+        <field name="parent_id" ref="hr_governance.circle_development_team" />
+        <field name="type_id" ref="hr_governance.role_type_development_team" />
+        <field name="shape_type">circle</field>
+        <field name="color">13</field>
+    </record>
+    <!-- Backend Team Lead -->
+    <record id="role_backend_team_lead" model="governance.circle">
+        <field name="name">Backend Team Lead</field>
+        <field name="parent_id" ref="hr_governance.circle_backend_team" />
+        <field name="type_id" ref="hr_governance.role_type_team_lead" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">6</field>
+    </record>
+    <!-- Backend Developer -->
+    <record id="role_backend_developer" model="governance.circle">
+        <field name="name">Backend Developer</field>
+        <field name="parent_id" ref="hr_governance.circle_backend_team" />
+        <field name="type_id" ref="hr_governance.role_type_developer" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">7</field>
+    </record>
+    <!-- DevOps Team Circle (under Technology Leadership) -->
+    <record id="circle_devops_team" model="governance.circle">
+        <field name="name">DevOps Team</field>
+        <field name="parent_id" ref="hr_governance.circle_tech_leadership" />
+        <field name="type_id" ref="hr_governance.role_type_tech_leadership" />
+        <field name="shape_type">circle</field>
+        <field name="color">14</field>
+    </record>
+    <!-- DevOps Lead -->
+    <record id="role_devops_lead" model="governance.circle">
+        <field name="name">DevOps Lead</field>
+        <field name="parent_id" ref="hr_governance.circle_devops_team" />
+        <field name="type_id" ref="hr_governance.role_type_team_lead" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">6</field>
+    </record>
+    <!-- DevOps Engineer -->
+    <record id="role_devops_engineer" model="governance.circle">
+        <field name="name">DevOps Engineer</field>
+        <field name="parent_id" ref="hr_governance.circle_devops_team" />
+        <field name="type_id" ref="hr_governance.role_type_developer" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">7</field>
+    </record>
+    <!-- Quality Assurance Team Circle -->
+    <record id="circle_qa_team" model="governance.circle">
+        <field name="name">Quality Assurance Team</field>
+        <field name="parent_id" ref="hr_governance.root" />
+        <field name="type_id" ref="hr_governance.role_type_development_team" />
+        <field name="shape_type">circle</field>
+        <field name="color">15</field>
+    </record>
+    <!-- QA Lead -->
+    <record id="role_qa_lead" model="governance.circle">
+        <field name="name">QA Lead</field>
+        <field name="parent_id" ref="hr_governance.circle_qa_team" />
+        <field name="type_id" ref="hr_governance.role_type_team_lead" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">6</field>
+    </record>
+    <!-- QA Engineer -->
+    <record id="role_qa_engineer" model="governance.circle">
+        <field name="name">QA Engineer</field>
+        <field name="parent_id" ref="hr_governance.circle_qa_team" />
+        <field name="type_id" ref="hr_governance.role_type_developer" />
+        <field name="shape_type">hexagon</field>
+        <field name="color">7</field>
+    </record>
+</odoo>

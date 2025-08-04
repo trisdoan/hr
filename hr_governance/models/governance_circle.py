@@ -5,7 +5,7 @@ import random
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import AccessError, UserError
-from odoo.tools import html_to_inner_content
+from odoo.tools.mail import html_to_inner_content
 from odoo.tools.misc import str2bool
 
 
@@ -33,7 +33,24 @@ class GovernanceCircle(models.Model):
         "governance.circle",
         "parent_id",
     )
-    # assigned members for circle
+
+    is_editable = fields.Boolean(compute="_compute_is_editable")
+    is_addable = fields.Boolean(compute="_compute_is_addable")
+    color = fields.Integer(
+        compute="_compute_fields_from_type",
+        readonly=False,
+        store=True,
+        default=random.randint(2, 11),
+    )
+    is_circle = fields.Boolean(compute="_compute_is_circle", store=True, readonly=False)
+    is_color_field_invisible = fields.Boolean(
+        compute="_compute_is_color_field_invisible",
+    )
+    is_root = fields.Boolean(default=False)
+
+    ##########################################################################
+    # Member fields
+    ##########################################################################
     member_ids = fields.Many2manyCustom(
         "hr.employee",
         "governance_circle_member_rel",
@@ -43,12 +60,15 @@ class GovernanceCircle(models.Model):
         string="Members",
         compute="_compute_member_ids",
     )
-    # assigned members for role
     member_rel_ids = fields.One2many("governance.circle.member.rel", "circle_id")
+    member_count = fields.Integer(compute="_compute_member_count")
     assigned_user_ids = fields.Many2many(
         "res.users", compute="_compute_assigned_user_ids", string="Assigned Users"
     )
-    member_count = fields.Integer(compute="_compute_member_count")
+
+    ##########################################################################
+    # Role fields
+    ##########################################################################
     type_id = fields.Many2one(
         "governance.role.type",
         tracking=True,
@@ -60,17 +80,18 @@ class GovernanceCircle(models.Model):
     )
     type_name = fields.Selection(related="type_id.type")
     is_steering_role = fields.Boolean(related="type_id.is_steering_role")
+    shape_type = fields.Selection(
+        [("circle", "Circle"), ("hexagon", "Hexagon")],
+        string="Shape",
+        default="circle",
+    )
+
+    ##########################################################################
+    # Content fields
+    ##########################################################################
     purpose = fields.Html(
         compute="_compute_fields_from_type",
         readonly=False,
-        store=True,
-        string="Raison d'être",
-    )
-    # technical fields to store input from user
-    user_input_purpose = fields.Text(compute="_compute_user_input_purpose", store=True)
-    track_purpose = fields.Text(
-        compute="_compute_tracking_fields",
-        tracking=True,
         store=True,
         string="Raison d'être",
     )
@@ -80,55 +101,30 @@ class GovernanceCircle(models.Model):
         store=True,
         string="Domain of authority",
     )
-    authority_ids = fields.Many2many(
-        comodel_name="governance.authority",
-    )
-    # technical fields to store input from user
-    user_input_authority = fields.Html(
-        compute="_compute_user_input_authority", store=True
-    )
-    track_authority = fields.Text(
-        compute="_compute_tracking_fields",
-        tracking=True,
-        store=True,
-        string="Domain of authority",
-    )
-    expectation_ids = fields.Many2many(
-        comodel_name="governance.expectation",
-    )
     expectation = fields.Html(
         compute="_compute_fields_from_type",
         readonly=False,
         store=True,
         string="Expectations",
     )
-    # technical fields to store input from user
-    user_input_expectation = fields.Text(
-        compute="_compute_user_input_expectation", store=True
-    )
-    track_expectation = fields.Text(
+    # duplicate fields for tracking
+    purpose_tracking = fields.Text(
         compute="_compute_tracking_fields",
+        store=True,
         tracking=True,
+        string="Raison d'être",
+    )
+    authority_tracking = fields.Text(
+        compute="_compute_tracking_fields",
         store=True,
+        tracking=True,
+        string="Domain of authority",
+    )
+    expectation_tracking = fields.Text(
+        compute="_compute_tracking_fields",
+        store=True,
+        tracking=True,
         string="Expectations",
-    )
-    is_editable = fields.Boolean(compute="_compute_is_editable")
-    is_addable = fields.Boolean(compute="_compute_is_addable")
-    color = fields.Integer(
-        compute="_compute_fields_from_type",
-        readonly=False,
-        store=True,
-        default=lambda self: self._get_default_color(),
-    )
-    is_circle = fields.Boolean(compute="_compute_is_circle", store=True)
-    is_color_field_invisible = fields.Boolean(
-        compute="_compute_is_color_field_invisible",
-    )
-    is_root = fields.Boolean(default=False)
-    shape_type = fields.Selection(
-        [("circle", "Circle"), ("hexagon", "Hexagon")],
-        string="Shape",
-        default="circle",
     )
 
     _sql_constraints = [
@@ -139,12 +135,27 @@ class GovernanceCircle(models.Model):
         ),
     ]
 
+    @api.constrains("parent_id", "is_root")
+    def _check_parent_set(self):
+        for rec in self:
+            if not rec.is_root and not rec.parent_id:
+                raise UserError(_("Parent must be set"))
+
+    ##########################################################################
+    # Computed methods
+    ##########################################################################
     @api.depends("purpose", "authority", "expectation")
     def _compute_tracking_fields(self):
         for rec in self:
-            rec.track_purpose = html_to_inner_content(rec.purpose)
-            rec.track_authority = html_to_inner_content(rec.authority)
-            rec.track_expectation = html_to_inner_content(rec.expectation)
+            rec.purpose_tracking = (
+                html_to_inner_content(rec.purpose) if rec.purpose else ""
+            )
+            rec.authority_tracking = (
+                html_to_inner_content(rec.authority) if rec.authority else ""
+            )
+            rec.expectation_tracking = (
+                html_to_inner_content(rec.expectation) if rec.expectation else ""
+            )
 
     @api.depends("member_ids", "member_rel_ids")
     def _compute_assigned_user_ids(self):
@@ -155,38 +166,6 @@ class GovernanceCircle(models.Model):
                 rec.assigned_user_ids = rec.member_rel_ids.member_id.user_id
             else:
                 rec.assigned_user_ids = False
-
-    def _compute_user_input_field(self, field_name, template_field_name):
-        for rec in self:
-            if not rec.type_id or not getattr(rec, field_name):
-                setattr(rec, f"user_input_{field_name}", "")
-                continue
-            elif self.env.context.get("skip_update_user_input"):
-                continue
-            from_template = html_to_inner_content(
-                getattr(rec.type_id, template_field_name)
-            )
-            existing = html_to_inner_content(getattr(rec, field_name))
-            cleaned_existing = existing.replace(from_template, "")
-            setattr(rec, f"user_input_{field_name}", cleaned_existing)
-
-    @api.depends("purpose")
-    def _compute_user_input_purpose(self):
-        self._compute_user_input_field(
-            field_name="purpose", template_field_name="purpose"
-        )
-
-    @api.depends("expectation")
-    def _compute_user_input_expectation(self):
-        self._compute_user_input_field(
-            field_name="expectation", template_field_name="expectation"
-        )
-
-    @api.depends("authority")
-    def _compute_user_input_authority(self):
-        self._compute_user_input_field(
-            field_name="authority", template_field_name="authority"
-        )
 
     @api.depends("parent_id", "parent_id.suitable_type_ids")
     def _compute_suitable_type_ids(self):
@@ -213,24 +192,6 @@ class GovernanceCircle(models.Model):
             )
             rec.member_ids |= steering_roles.member_rel_ids.mapped("member_id")
 
-    @api.model
-    def get_greyscale_mode_param(self):
-        is_greyscale_mode_on = str2bool(
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("hr_governance.governance_check_grayscale")
-        )
-        return is_greyscale_mode_on
-
-    @api.model
-    def get_stripe_param(self):
-        is_stripe_all_roles = str2bool(
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("hr_governance.stripe_all_unassigned_roles")
-        )
-        return is_stripe_all_roles
-
     @api.depends("is_circle")
     def _compute_is_color_field_invisible(self):
         """Field Color on Form is visible when
@@ -250,7 +211,7 @@ class GovernanceCircle(models.Model):
             .get_param("hr_governance.only_manager_change_color")
         )
         for rec in self:
-            is_manager = self.env.user.user_has_groups(
+            is_manager = self.env.user.has_groups(
                 "hr_governance.governance_group_manager"
             )
             if only_manager_change_color and not is_manager:
@@ -259,15 +220,6 @@ class GovernanceCircle(models.Model):
                 rec.is_color_field_invisible = is_greyscale_mode_on and rec.is_circle
                 if not is_greyscale_mode_on:
                     rec.is_color_field_invisible = False
-
-    @api.model
-    def _get_default_color(self):
-        """List of colors can be found in static/src/components/circlepack_colorlist.js
-        By default,
-            - a circle gets a random color (except white)
-            - a role gets White unless its type is assigned with color
-        """
-        return random.randint(2, 11)
 
     @api.depends("child_ids", "is_root")
     def _compute_is_circle(self):
@@ -286,7 +238,7 @@ class GovernanceCircle(models.Model):
     def _compute_fields_from_type(self):
         for rec in self:
             if rec.is_circle:
-                rec.color = rec.color or rec._get_default_color()
+                rec.color = rec.color or random.randint(2, 11)
             else:
                 if not rec.type_id:
                     rec.color = rec.color or 1  # role is white by default
@@ -298,13 +250,13 @@ class GovernanceCircle(models.Model):
                 if not rec.color:
                     rec.color = rec.type_id.color
 
-                if not rec.user_input_purpose:
+                if not rec.purpose:
                     rec.purpose = rec.type_id.purpose
 
-                if not rec.user_input_expectation:
+                if not rec.expectation:
                     rec.expectation = rec.type_id.expectation
 
-                if not rec.user_input_authority:
+                if not rec.authority:
                     rec.authority = rec.type_id.authority
 
     @api.depends("type_id.type")
@@ -330,29 +282,233 @@ class GovernanceCircle(models.Model):
         for rec in self:
             rec.member_count = len(rec.member_ids)
 
-    @api.constrains("parent_id", "is_root")
-    def _check_parent_set(self):
-        for rec in self:
-            if not rec.is_root and not rec.parent_id:
-                raise UserError(_("Parent must be set"))
+    ##########################################################################
+    # Main methods
+    ##########################################################################
 
     @api.model_create_multi
     def create(self, vals):
         for val in vals:
-            context = self.env.context
-            # auto create structuring roles for circle
-            if context.get("default_is_circle", False):
-                circle = self.new(val)
-                new_roles_vals = circle.type_id._get_structuring_role_vals()
-                existing_child_ids = val.get("child_ids", [])
-                new_child_ids = existing_child_ids + [
-                    (0, 0, val) for val in new_roles_vals
+            self._prepare_auto_structuring_roles(val)
+        return super().create(vals)
+
+    def write(self, vals):
+        context = self.env.context
+        forbidden_fields = self._get_forbidden_change_fields()
+        if forbidden_fields and not context.get("skip_sanity_check"):
+            self._sanity_check(forbidden_fields, vals)
+
+        # Permission constraint
+        allowed_to_edit = (
+            self.env.su
+            or self.id in self.env.user.allowed_edit_governance_ids.ids
+            or self.env.user.has_groups("hr_governance.governance_group_manager")
+        )
+        if not allowed_to_edit:
+            if self.is_circle:
+                editable_roles = [
+                    role["name"] for role in self.type_id._get_enable_edit_circle_role()
                 ]
-                val["child_ids"] = new_child_ids
+                names = ", ".join(editable_roles)
+                raise AccessError(_("Only %s can edit this Circle", names))
+            raise AccessError(_("You cannot edit this Role"))
 
-        records = super().create(vals)
+        return super().write(vals)
 
-        return records
+    def unlink(self):
+        # Add roles to batch of records to delete
+        records = self.get_hierarchy_records(include_self=True)
+        # sorted to process child first
+        self = records.sorted(key=lambda x: x.id, reverse=True)
+        for rec in self:
+            if rec.member_rel_ids:
+                rec.member_rel_ids.unlink()
+        return super().unlink()
+
+    ##########################################################################
+    # API methods
+    ##########################################################################
+
+    @api.model
+    def get_greyscale_mode_param(self):
+        is_greyscale_mode_on = str2bool(
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("hr_governance.governance_check_grayscale")
+        )
+        return is_greyscale_mode_on
+
+    @api.model
+    def get_stripe_param(self):
+        is_stripe_all_roles = str2bool(
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("hr_governance.stripe_all_unassigned_roles")
+        )
+        return is_stripe_all_roles
+
+    # TODO: take advantage of hierarchy_read from native
+    @api.model
+    def get_hierarchy_data(self, domain):
+        """Used to populate circle packing chart"""
+        root = self.search([("parent_id", "=", False)], limit=1)
+        records = self.search(domain)
+        fields = self._get_circle_and_role_fields()
+        records |= root
+
+        result = records.read(fields)
+        return result
+
+    @api.model
+    def js_get_deleted_circle_info(self, circle_id):
+        result = {}
+        if circle_id:
+            circle = self.browse(circle_id)
+            children = circle.get_hierarchy_records()
+            result.update(
+                {
+                    "subcircles": len(children.filtered("is_circle").ids),
+                    "roles": len(children.filtered(lambda x: not x.is_circle).ids),
+                    "employees": len(children.member_rel_ids.ids),
+                }
+            )
+        return result
+
+    def get_circles_editable_by_steering_roles(self, roles, lookup):
+        all_records = editable_records = excluded_records = self
+        for role in roles:
+            hierarchy_records = lookup.get(role.id, self)
+            all_records |= hierarchy_records
+
+        for record in all_records:
+            if not record._has_edit_role_assigned():
+                editable_records |= record | record.child_ids.filtered_domain(
+                    [("is_circle", "=", False)]
+                )
+                # exclude it when its parent is assigned
+                # only member belonging to parent is allowed
+                if (
+                    record.parent_id in all_records
+                    and record.parent_id._has_edit_role_assigned()
+                ):
+                    excluded_records |= record | record.child_ids
+        return editable_records - excluded_records
+
+    def get_circles_editable_by_edit_roles(self, user_id, roles, lookup):
+        all_records = editable_records = excluded_records = self
+        for role in roles:
+            hierarchy_records = lookup.get(role.id, self)
+            all_records |= hierarchy_records
+
+        for record in all_records:
+            is_member = user_id in record.member_ids.mapped("user_id").ids
+            is_member_of_parent = (
+                user_id in record.parent_id.member_ids.mapped("user_id").ids
+            )
+            if not record._has_edit_role_assigned() and (
+                record._has_steering_role_assigned()
+                or (
+                    record.parent_id._has_steering_role_assigned()
+                    and not is_member_of_parent
+                )
+            ):
+                excluded_records |= record | record.child_ids
+
+            elif (
+                record._has_edit_role_assigned() and is_member
+            ) or not record._has_edit_role_assigned():
+                editable_records |= record | record.child_ids.filtered_domain(
+                    [("is_circle", "=", False)]
+                )
+        return editable_records - excluded_records
+
+    ##########################################################################
+    # Helpers
+    ##########################################################################
+
+    def _get_forbidden_change_fields(self):
+        forbidden_keys = ["expectation", "authority", "purpose"]
+        return forbidden_keys
+
+    def _prepare_auto_structuring_roles(self, val):
+        """
+        Automatically adds structuring roles as children when creating
+        a new circle, based on the circle's type configuration.
+        """
+        context = self.env.context
+        if not context.get("default_is_circle", False):
+            return
+
+        circle = self.new(val)
+        if not circle.type_id:
+            return
+
+        new_roles_vals = circle.type_id._get_structuring_role_vals()
+        if not new_roles_vals:
+            return
+
+        existing_child_ids = val.get("child_ids", [])
+        new_child_ids = existing_child_ids + [
+            (0, 0, role_val) for role_val in new_roles_vals
+        ]
+        val["child_ids"] = new_child_ids
+
+    def _update_content(self, field_name, new_value, old_value):
+        self.ensure_one()
+        current_content = getattr(self, field_name) or ""
+        # extract plan text from html
+        current_content_plain = (
+            html_to_inner_content(current_content) if current_content else ""
+        )
+        old_content_plain = html_to_inner_content(old_value) if old_value else ""
+
+        user_input = ""
+        if current_content_plain and old_content_plain:
+            if current_content_plain.startswith(old_content_plain):
+                # Extract everything after the old template
+                user_input = current_content_plain[len(old_content_plain) :].strip()
+            else:
+                if old_content_plain in current_content_plain:
+                    template_pos = current_content_plain.find(old_content_plain)
+                    user_input = current_content_plain[
+                        template_pos + len(old_content_plain) :
+                    ].strip()
+                else:
+                    user_input = current_content_plain
+
+        user_input = user_input.strip()
+        if user_input:
+            # append it to the new template
+            new_content = new_value + "\n\n" + user_input
+        else:
+            new_content = new_value
+
+        self.with_context(skip_sanity_check=True).write({field_name: new_content})
+
+    def _sanity_check(self, forbidden_fields, value_list):
+        """
+        Sanity check for `write()`:
+        - Validate that values of fields imported from template role
+        are improperly modified
+        """
+        errors = []
+        for field in forbidden_fields:
+            if field in value_list.keys():
+                field_name = self._fields[field].get_description(self.env)["string"]
+                if isinstance(self._fields[field], fields.Html):
+                    from_template = html_to_inner_content(getattr(self.type_id, field))
+                    existing = value_list[field] or ""
+                    if from_template and from_template not in existing:
+                        errors.append(field_name)
+
+        if len(errors) > 0:
+            raise UserError(
+                _(
+                    "You can only add content at the end of %s created from a "
+                    "template.",
+                    ", ".join(errors),
+                )
+            )
 
     def _get_circle_and_role_fields(self):
         return [
@@ -368,72 +524,7 @@ class GovernanceCircle(models.Model):
             "shape_type",
         ]
 
-    # TODO: take advantage of hierarchy_read from native
-    @api.model
-    def get_hierarchy_data(self, domain):
-        """Used to populate circle packing chart"""
-        root = self.search([("parent_id", "=", False)], limit=1)
-        records = self.search(domain)
-        fields = self._get_circle_and_role_fields()
-        records |= root
-
-        result = records.read(fields)
-        return result
-
-    def write(self, vals):
-        context = self.env.context
-        forbidden_fields = self._get_forbidden_change_fields()
-        if forbidden_fields and not context.get("skip_update_user_input"):
-            self._sanity_check(forbidden_fields, vals)
-
-        # Permission constraint
-        allowed_to_edit = (
-            self.env.su
-            or self.id in self.env.user.allowed_edit_governance_ids.ids
-            or self.env.user.user_has_groups("hr_governance.governance_group_manager")
-        )
-        if not allowed_to_edit:
-            if self.is_circle:
-                editable_roles = [
-                    role["name"] for role in self.type_id._get_enable_edit_circle_role()
-                ]
-                names = ", ".join(editable_roles)
-                raise AccessError(_("Only %s can edit this Circle", names))
-            raise AccessError(_("You cannot edit this Role"))
-
-        res = super().write(vals)
-        return res
-
-    def _sanity_check(self, forbidden_fields, value_list):
-        """Sanity check for `write()`
-        Validate that values of fields imported from template role
-        are improperly modified
-        """
-        errors = []
-        for field in forbidden_fields:
-            if field in value_list.keys():
-                field_name = self._fields[field].get_description(self.env)["string"]
-                if isinstance(self._fields[field], fields.Html):
-                    from_template = html_to_inner_content(getattr(self.type_id, field))
-                    existing = html_to_inner_content(value_list[field])
-                    error = from_template and from_template not in existing
-                    if error:
-                        errors.append(field_name)
-
-        if len(errors) > 0:
-            raise UserError(
-                _(
-                    "You can only add content at the end of %s created from a "
-                    "template.",
-                    ", ".join(errors),
-                )
-            )
-
-    def _get_forbidden_change_fields(self):
-        forbidden_keys = ["expectation", "authority", "purpose"]
-        return forbidden_keys
-
-    def _get_hierarchy_records(self, reverse=False, include_self=False):
+    def get_hierarchy_records(self, reverse=False, include_self=False):
         """Return the hiearchy records in ``self`` based on reverse direction.
 
         :param reverse: If True, returns parent records.
@@ -457,32 +548,21 @@ class GovernanceCircle(models.Model):
             return self.env["governance.circle"]
         return roles + roles._get_roles_recursively(reverse)
 
-    def unlink(self):
-        # Add roles to batch of records to delete
-        records = self._get_hierarchy_records(include_self=True)
-        # sorted to process child first
-        self = records.sorted(key=lambda x: x.id, reverse=True)
-        for rec in self:
-            if rec.member_rel_ids:
-                rec.member_rel_ids.unlink()
-        return super().unlink()
-
-    @api.model
-    def js_get_deleted_circle_info(self, circle_id):
-        result = {}
-        if circle_id:
-            circle = self.browse(circle_id)
-            children = circle._get_hierarchy_records()
-            result.update(
-                {
-                    "subcircles": len(children.filtered("is_circle").ids),
-                    "roles": len(children.filtered(lambda x: not x.is_circle).ids),
-                    "employees": len(children.member_rel_ids.ids),
-                }
+    def _has_steering_role_assigned(self):
+        self.ensure_one()
+        return (
+            self.is_circle
+            and self.child_ids.search_count(
+                [
+                    ("parent_id", "=", self.id),
+                    ("type_id.is_steering_role", "=", True),
+                    ("member_rel_ids", "!=", False),
+                ],
             )
-        return result
+            > 0
+        )
 
-    def _is_assigned(self):
+    def _has_edit_role_assigned(self):
         self.ensure_one()
         return (
             self.is_circle
@@ -495,85 +575,3 @@ class GovernanceCircle(models.Model):
             )
             > 0
         )
-
-    def _is_assigned_w_steering(self):
-        self.ensure_one()
-        steering_role = self.env.ref(
-            "hr_governance.steering_gct", raise_if_not_found=False
-        )
-        return (
-            steering_role
-            and self.is_circle
-            and self.child_ids.search_count(
-                [
-                    ("parent_id", "=", self.id),
-                    ("type_id", "=", steering_role.id),
-                    ("member_rel_ids", "!=", False),
-                ],
-            )
-            > 0
-        )
-
-    def _get_steering_role_user_ids(self):
-        """Fetch user_ids of steering roles belonging to circle_id"""
-        if not self:
-            return []
-        steering_role = self.env.ref(
-            "hr_governance.steering_gct", raise_if_not_found=False
-        )
-        domain = [("type_id", "=", steering_role.id)]
-        steering = self
-        if self.is_circle:
-            steering |= self.child_ids.filtered_domain(domain)
-        else:
-            # if it's role, retrieve steering roles of encompassing circle
-            steering |= self._get_hierarchy_records(include_self=True).filtered_domain(
-                domain
-            )
-        user_ids = steering.member_rel_ids.member_id.mapped("user_id").ids
-        return user_ids if user_ids else []
-
-    @api.model
-    def _get_editable_records_from_steering(self, roles, lookup):
-        all_records = editable_records = excluded_records = self
-        for role in roles:
-            hierarchy_records = lookup.get(role.id, self)
-            all_records |= hierarchy_records
-
-        for record in all_records:
-            if not record._is_assigned():
-                editable_records |= record | record.child_ids.filtered_domain(
-                    [("is_circle", "=", False)]
-                )
-                # exclude it when its parent is assigned
-                # only member belonging to parent is allowed
-                if record.parent_id in all_records and record.parent_id._is_assigned():
-                    excluded_records |= record | record.child_ids
-        return editable_records - excluded_records
-
-    @api.model
-    def _get_editable_records_from_roles(self, user_id, roles, lookup):
-        all_records = editable_records = excluded_records = self
-        for role in roles:
-            hierarchy_records = lookup.get(role.id, self)
-            all_records |= hierarchy_records
-
-        for record in all_records:
-            is_member = user_id in record.member_ids.mapped("user_id").ids
-            is_member_of_parent = (
-                user_id in record.parent_id.member_ids.mapped("user_id").ids
-            )
-            if not record._is_assigned() and (
-                record._is_assigned_w_steering()
-                or (
-                    record.parent_id._is_assigned_w_steering()
-                    and not is_member_of_parent
-                )
-            ):
-                excluded_records |= record | record.child_ids
-
-            elif (record._is_assigned() and is_member) or not record._is_assigned():
-                editable_records |= record | record.child_ids.filtered_domain(
-                    [("is_circle", "=", False)]
-                )
-        return editable_records - excluded_records

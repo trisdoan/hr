@@ -1,4 +1,4 @@
-import {markup, onMounted} from "@odoo/owl";
+import {markup, onMounted, useState} from "@odoo/owl";
 import {DeleteRolesConfirmationDialog} from "./delete_roles_confirmation_dialog.esm";
 import {FormController} from "@web/views/form/form_controller";
 import {_t} from "@web/core/l10n/translation";
@@ -10,36 +10,9 @@ import {registry} from "@web/core/registry";
 export class FormWrapperController extends FormController {
     setup() {
         super.setup();
-        onMounted(() => {
-            if (!this.model.root.data.is_circle) {
-                // Hide create buttons when role is selected
-                $("button.o_form_button_create").css("display", "none");
-            }
-        });
-    }
-    async save(params) {
-        const res = await super.save(params);
-        this.ui.bus.trigger("governance:form_saved_record");
-        return res;
-    }
-
-    get deleteConfirmationDialogProps() {
-        const res = super.deleteConfirmationDialogProps;
-        const originalConfirm = res.confirm;
-
-        res.confirm = async () => {
-            await originalConfirm();
-            this.ui.bus.trigger("governance:form_deleted_record", {
-                deletedResId: this.props.resId,
-            });
-        };
-        return res;
     }
 
     async deleteRecord() {
-        if (!this.model.root.data.child_ids?.count) {
-            return super.deleteRecord();
-        }
         const data = await this.model.orm.call(
             "governance.circle",
             "js_get_deleted_circle_info",
@@ -61,9 +34,6 @@ Are you sure you want to proceed?`
                     this.ui.bus.trigger("governance:form_deleted_record", {
                         deletedResId: this.props.resId,
                     });
-                }
-                if (!this.model.root.resId) {
-                    this.env.config.historyBack();
                 }
             },
         });
@@ -97,16 +67,8 @@ Are you sure you want to proceed?`
         context.default_is_circle = true;
     }
 
-    async _create_role(context = {}) {
+    _create_role(context = {}) {
         context.default_is_circle = false;
-    }
-
-    async discard() {
-        if (this.model.root.isNew) {
-            this.ui.bus.trigger("governance:form_discard_record");
-            return;
-        }
-        return super.discard();
     }
 }
 

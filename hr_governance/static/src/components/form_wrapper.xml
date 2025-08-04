@@ -30,7 +30,7 @@
             position="replace"
         >
             <t t-set-slot="control-panel-create-button">
-                <t t-if="canCreate">
+                <t t-if="canCreate and canCreateButtonshown">
                     <button
                         type="button"
                         class="btn btn-outline-primary o_form_button_create"

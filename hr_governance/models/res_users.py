@@ -13,59 +13,59 @@ class Users(models.Model):
     )
 
     def _compute_allowed_edit_governance_ids(self):
-        """Write access of active user:
-        - His own roles
-        - If the user belongs to a role flagged as 'Enabled Edit Circle',
-          he is allowed to edit the parent circle of that role and all
-          roles and circles within it.
-        - If no editable role assigned and he is assigned to steering role of that
-        circle,
-          or
-        - There is no editable roles, no steering role in the current circle,
-          but he is assigned to steering role of the upper circle.
         """
-        steering_role = self.env.ref(
-            "hr_governance.steering_gct", raise_if_not_found=False
-        )
+        Write access rules:
+        - User can edit circles where they have edit-enabled roles
+        - If no edit-enabled roles, user can edit circles where they have steering roles
+        - Steering roles act as fallback when no edit-enabled roles are assigned
+        """
         for user in self:
-            user_roles = self._get_user_roles(user.id)
-            if not user_roles:
+            user_assigned_roles = self._get_user_assigned_roles(user.id)
+            if not user_assigned_roles:
                 user.allowed_edit_governance_ids = [Command.clear()]
                 continue
 
-            # cache all records per role
-            hierarchy_records_per_role = {}
-            for role in user_roles:
-                circle = role.parent_id
-                hierarchy_records_per_role[role.id] = circle._get_hierarchy_records(
-                    include_self=True
-                ).filtered_domain([("is_circle", "=", True)])
+            circle_hierarchy_cache = self._build_circle_hierarchy_cache(
+                user_assigned_roles
+            )
 
-            # roles that marked as 'Enable Edit Circle'
-            enabled_edit_roles = user_roles.filtered_domain(
+            # Get editable circles from edit-capable roles
+            edit_capable_roles = user_assigned_roles.filtered_domain(
                 [("type_id.enable_edit_circle", "=", True)]
             )
-            editable_records = self.env[
+            editable_circles = self.env[
                 "governance.circle"
-            ]._get_editable_records_from_roles(
-                self.id, enabled_edit_roles, hierarchy_records_per_role
+            ].get_circles_editable_by_edit_roles(
+                user.id, edit_capable_roles, circle_hierarchy_cache
             )
 
-            # steering roles act as catch-up
-            steering_roles = user_roles.filtered_domain(
-                [("type_id", "=", steering_role.id)]
+            # fallback access
+            steering_capable_roles = user_assigned_roles.filtered_domain(
+                [("type_id.is_steering_role", "=", True)]
             )
-            editable_records |= self.env[
+            editable_circles |= self.env[
                 "governance.circle"
-            ]._get_editable_records_from_steering(
-                steering_roles, hierarchy_records_per_role
+            ].get_circles_editable_by_steering_roles(
+                steering_capable_roles, circle_hierarchy_cache
             )
 
+            # Set the computed field
             user.allowed_edit_governance_ids = [Command.clear()] + [
-                Command.link(record.id) for record in editable_records
+                Command.link(circle.id) for circle in editable_circles
             ]
 
-    def _get_user_roles(self, user_id):
+    def _build_circle_hierarchy_cache(self, user_assigned_roles):
+        """Build a cache of circle hierarchy records for each user role to avoid repeated queries."""
+        circle_hierarchy_cache = {}
+        for role in user_assigned_roles:
+            parent_circle = role.parent_id
+            circle_hierarchy_cache[role.id] = parent_circle.get_hierarchy_records(
+                include_self=True
+            ).filtered_domain([("is_circle", "=", True)])
+        return circle_hierarchy_cache
+
+    def _get_user_assigned_roles(self, user_id):
+        """Get all roles assigned to the user across all governance circles."""
         return self.env["governance.circle"].search(
             [("member_rel_ids.member_id.user_id", "=", user_id)]
         )

@@ -22,8 +22,5 @@ export class CirclePackController extends Component {
             domain: this.props.domain,
         });
         useSubEnv({model: this.model});
-        useBus(this.model.bus, "update", () => {
-            this.render(true);
-        });
     }
 }
