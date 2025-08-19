@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="role_type_ceo" model="governance.role.type">
+        <field name="name">CEO</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Lead the organization with strategic vision and ensure sustainable growth</field>
+        <field
+            name="authority"
+        >Final decision-making authority on all organizational matters</field>
+        <field
+            name="expectation"
+        >Drive innovation, maintain stakeholder relationships, and ensure organizational success</field>
+        <field name="color">1</field>
+        <field name="is_steering_role">True</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_cto" model="governance.role.type">
+        <field name="name">CTO</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Lead technology strategy and ensure technical excellence across the organization</field>
+        <field
+            name="authority"
+        >Technology decisions, architecture oversight, and technical team leadership</field>
+        <field
+            name="expectation"
+        >Drive technological innovation, maintain technical standards, and ensure scalable solutions</field>
+        <field name="color">2</field>
+        <field name="is_steering_role">True</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_cfo" model="governance.role.type">
+        <field name="name">CFO</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Ensure financial health and strategic financial planning</field>
+        <field
+            name="authority"
+        >Financial decisions, budget oversight, and financial reporting</field>
+        <field
+            name="expectation"
+        >Maintain financial stability, optimize costs, and ensure regulatory compliance</field>
+        <field name="color">3</field>
+        <field name="is_steering_role">True</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_hr_director" model="governance.role.type">
+        <field name="name">HR Director</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Lead human resources strategy and ensure employee well-being</field>
+        <field
+            name="authority"
+        >HR policies, talent management, and organizational culture</field>
+        <field
+            name="expectation"
+        >Foster positive work environment, develop talent, and ensure compliance with labor laws</field>
+        <field name="color">4</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_product_manager" model="governance.role.type">
+        <field name="name">Product Manager</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Define and execute product strategy to meet customer needs</field>
+        <field
+            name="authority"
+        >Product roadmap, feature prioritization, and product decisions</field>
+        <field
+            name="expectation"
+        >Deliver high-quality products, gather customer feedback, and drive product success</field>
+        <field name="color">5</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">False</field>
+    </record>
+    <record id="role_type_team_lead" model="governance.role.type">
+        <field name="name">Team Lead</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Lead and coordinate team activities to achieve project goals</field>
+        <field
+            name="authority"
+        >Team coordination, task assignment, and project oversight</field>
+        <field
+            name="expectation"
+        >Ensure team productivity, mentor team members, and deliver project objectives</field>
+        <field name="color">6</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">False</field>
+    </record>
+    <record id="role_type_developer" model="governance.role.type">
+        <field name="name">Developer</field>
+        <field name="type">template</field>
+        <field
+            name="purpose"
+        >Develop high-quality software solutions and maintain code standards</field>
+        <field
+            name="authority"
+        >Technical implementation, code quality, and development decisions</field>
+        <field
+            name="expectation"
+        >Write clean code, collaborate with team, and deliver features on time</field>
+        <field name="color">7</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">False</field>
+    </record>
+    <!-- Structure Role Types -->
+    <record id="role_type_executive_committee" model="governance.role.type">
+        <field name="name">Executive Committee</field>
+        <field name="type">structure</field>
+        <field
+            name="purpose"
+        >Provide strategic oversight and make high-level organizational decisions</field>
+        <field
+            name="authority"
+        >Strategic planning, major investments, and organizational direction</field>
+        <field
+            name="expectation"
+        >Ensure organizational success, maintain stakeholder relationships, and drive innovation</field>
+        <field name="color">8</field>
+        <field name="is_steering_role">True</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_tech_leadership" model="governance.role.type">
+        <field name="name">Technology Leadership</field>
+        <field name="type">structure</field>
+        <field
+            name="purpose"
+        >Coordinate technology initiatives and ensure technical excellence</field>
+        <field
+            name="authority"
+        >Technology strategy, architecture decisions, and technical standards</field>
+        <field
+            name="expectation"
+        >Drive technical innovation, maintain quality standards, and ensure scalable solutions</field>
+        <field name="color">9</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">True</field>
+    </record>
+    <record id="role_type_product_team" model="governance.role.type">
+        <field name="name">Product Team</field>
+        <field name="type">structure</field>
+        <field
+            name="purpose"
+        >Collaborate to deliver exceptional products that meet customer needs</field>
+        <field
+            name="authority"
+        >Product development, feature decisions, and user experience</field>
+        <field
+            name="expectation"
+        >Deliver high-quality products, iterate based on feedback, and maintain product excellence</field>
+        <field name="color">10</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">False</field>
+    </record>
+    <record id="role_type_development_team" model="governance.role.type">
+        <field name="name">Development Team</field>
+        <field name="type">structure</field>
+        <field
+            name="purpose"
+        >Build and maintain robust software solutions through collaborative development</field>
+        <field
+            name="authority"
+        >Technical implementation, code architecture, and development practices</field>
+        <field
+            name="expectation"
+        >Write maintainable code, follow best practices, and deliver features efficiently</field>
+        <field name="color">11</field>
+        <field name="is_steering_role">False</field>
+        <field name="enable_edit_circle">False</field>
+    </record>
+</odoo>
