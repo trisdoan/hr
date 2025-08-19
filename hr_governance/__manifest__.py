@@ -24,14 +24,18 @@
         "views/menu_views.xml",
         "views/res_config_settings_views.xml",
     ],
-    "demo": ["demo/governance_role_type_demo.xml", "demo/governance_circle_demo.xml"],
+    "demo": [
+        "demo/governance_role_type_demo.xml",
+        "demo/governance_circle_demo.xml",
+    ],
     "assets": {
         "hr_governance.chart_libs": [
             "/hr_governance/static/lib/**/*",
         ],
         "web.assets_backend": [
-            "hr_governance/static/src/components/**/*",
-            "hr_governance/static/src/**/*",
+            "hr_governance/static/src/**/*.js",
+            "hr_governance/static/src/**/*.scss",
+            "hr_governance/static/src/**/*.xml",
         ],
     },
     "installable": True,
