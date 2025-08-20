@@ -115,9 +115,7 @@ export class GovernanceChartComponent extends Component {
         useBus(this.searchModel, "update", async () => {
             await this.handleSearchUpdate();
         });
-        useBus(this.env.bus, "governance:form_saved_record", () => {
-            this.handleFullUpdate();
-        });
+
         useBus(this.env.bus, "governance:form_deleted_record", (ev) => {
             // Find parent of the deleted
             const deletedResId = ev.detail.deletedResId;
@@ -184,6 +182,7 @@ export class GovernanceChartComponent extends Component {
             preventCreate: this.preventCreate,
             preventEdit: this.preventEdit,
             noBreadcrumbs: true,
+            onSave: () => this.handleFullUpdate(),
         };
     }
 

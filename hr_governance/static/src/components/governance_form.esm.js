@@ -11,6 +11,11 @@ import {_t} from "@web/core/l10n/translation";
 import {markup} from "@odoo/owl";
 
 export class GovernanceFormController extends FormController {
+    static props = {
+        ...FormController.props,
+        onSave: Function,
+    };
+
     setup() {
         super.setup();
         this.ui = useService("ui");
@@ -19,7 +24,9 @@ export class GovernanceFormController extends FormController {
     // Create
     async save(params) {
         const res = await super.save(params);
-        this.env.bus.trigger("governance:form_saved_record");
+        if (this.props.onSave) {
+            this.props.onSave();
+        }
         return res;
     }
 
