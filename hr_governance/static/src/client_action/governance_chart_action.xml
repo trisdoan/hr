@@ -4,6 +4,10 @@
         <Layout>
             <Many2ManySearchBar toggler="searchBarToggler" />
             <div class="o_governance_chart_container o_content" t-ref="container">
+                <button
+                    class="btn btn-primary p-2 m-2"
+                    t-on-click="onShowMessageClick"
+                >Show Message on Chart</button>
                 <div class="o_governance_main_layout">
                     <div
                         class="o_governance_chart_area"

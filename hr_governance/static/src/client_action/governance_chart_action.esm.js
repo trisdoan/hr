@@ -58,6 +58,10 @@ export class GovernanceChartComponent extends Component {
         this.formAreaRef = useRef("formArea");
         this.chartRendererAPI = null;
 
+        this.onChartRendererReady = (api) => {
+            this.chartRendererAPI = api;
+        };
+
         onWillStart(async () => {
             // Setup search view
             const config = {
@@ -206,6 +210,12 @@ export class GovernanceChartComponent extends Component {
         }
     }
 
+    onShowMessageClick() {
+        if (this.chartRendererAPI && this.chartRendererAPI.showMessage) {
+            this.chartRendererAPI.showMessage("Hello from the parent component!");
+        }
+    }
+
     get chartRendererProps() {
         return {
             data: this.state.data,
@@ -214,6 +224,7 @@ export class GovernanceChartComponent extends Component {
             isGrayscaleMode: this.is_grayscale_on,
             isStripeAllRoles: this.is_stripe_all_roles,
             onNodeClick: this.onChartNodeClicked.bind(this),
+            onReady: this.onChartRendererReady,
         };
     }
 }

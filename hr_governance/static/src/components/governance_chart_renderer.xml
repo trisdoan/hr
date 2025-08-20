@@ -2,9 +2,18 @@
 <templates>
     <t t-name="hr_governance.GovernanceChartRenderer">
         <div
-            class="o_governance_chart_container"
-            t-ref="chartContainer"
-            style="width: 100%; height: 100%;"
-        />
+            class="o_governance_chart_renderer"
+            style="position: relative; width: 100%; height: 100%;"
+        >
+            <div
+                t-ref="messageBox"
+                style="position: absolute; top: 10px; left: 10px; background: #ffc107; padding: 5px; border-radius: 3px; z-index: 10;"
+            />
+            <div
+                class="o_governance_chart_container"
+                t-ref="chartContainer"
+                style="width: 100%; height: 100%;"
+            />
+        </div>
     </t>
 </templates>

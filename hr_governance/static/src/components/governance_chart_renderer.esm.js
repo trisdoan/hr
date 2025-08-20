@@ -13,10 +13,12 @@ export class GovernanceChartRenderer extends Component {
         isGrayscaleMode: {type: Boolean, optional: true},
         isStripeAllRoles: {type: Boolean, optional: true},
         onNodeClick: {type: Function, optional: true},
+        onReady: {type: Function, optional: true},
     };
 
     setup() {
         this.chartRef = useRef("chartContainer");
+        this.messageBox = useRef("messageBox");
         this.data = this.props.data;
         this.searchResults = this.props.searchResults;
 
@@ -25,6 +27,11 @@ export class GovernanceChartRenderer extends Component {
         });
 
         onMounted(() => {
+            if (this.props.onReady) {
+                this.props.onReady({
+                    showMessage: this.showMessage.bind(this),
+                });
+            }
             if (this.props.dimensions.width && this.props.dimensions.height) {
                 this.renderChart(
                     this.props.dimensions.width,
@@ -50,6 +57,12 @@ export class GovernanceChartRenderer extends Component {
                 );
             }
         });
+    }
+
+    showMessage(text) {
+        if (this.messageBox.el) {
+            this.messageBox.el.innerText = text;
+        }
     }
 
     // Chart Rendering Methods
